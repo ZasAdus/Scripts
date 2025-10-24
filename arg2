@@ -1,0 +1,107 @@
+#!/bin/bash
+bubble_sort() {
+    local arr=("$@")
+    local n=${#arr[@]}
+    for ((i=0; i<n; i++)); do
+        for ((j=0; j<n-i-1; j++)); do
+            if [[ "${arr[j]}" > "${arr[j+1]}" ]]; then
+                temp="${arr[j]}"
+                arr[j]="${arr[j+1]}"
+                arr[j+1]="$temp"
+            fi
+        done
+    done
+    echo "${arr[@]}"
+}
+
+remove_duplicates() {
+    local arr=("$@")
+    local unique=()
+    local seen=""
+    
+    for item in "${arr[@]}"; do
+        if [[ ! " $seen " =~ " $item " ]]; then
+            unique+=("$item")
+            seen="$seen $item"
+        fi
+    done
+    
+    echo "${unique[@]}"
+}
+
+options=()
+isValidInputOutput=true
+
+PARSED=$(getopt -o abcdefghi:jklmno:pqrstuwvxyz --long help -n "$0" -- "$@")
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+
+eval set -- "$PARSED"
+
+while true; do
+    case "$1" in
+        --help)
+            echo "help"
+            exit 0
+            ;;
+        -i)
+            if [[ "$2" == -* ]]; then
+                isValidInputOutput=false
+            else
+                inputFile="$2"
+                options+=("i")
+                shift 2
+            fi
+            ;;
+        -o)
+            if [[ "$2" == -* ]]; then
+                isValidInputOutput=false
+            else
+                outputFile="$2"
+                options+=("o")
+                shift 2
+            fi
+            ;;
+        -q)
+            echo "Unsupported option: -q"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            opt="${1#-}"
+            options+=("$opt")
+            shift
+            ;;
+    esac
+done
+
+options=($(remove_duplicates "${options[@]}"))
+options=($(bubble_sort "${options[@]}"))
+
+for opt in "${options[@]}"; do
+    if [ "$opt" = "i" ]; then
+        result="-i present and set to \"$inputFile\""
+        echo "$result"
+    elif [ "$opt" = "o" ]; then
+        result="-o present and set to \"$outputFile\""
+        echo "$result"
+    else
+        result="-$opt present"
+        echo "$result"
+    fi
+done
+
+if [ $# -eq 0 ]; then
+    exit 0
+else
+    echo "Arguments are:"
+    for i in $(seq 1 $#); do
+        eval "echo \"\\\$$i=\${$i}\""
+    done
+fi
+
+exit 0
